@@ -9,38 +9,78 @@ pragma solidity ^0.4.8;
  * The TimberCoin is a generic token that represents the amount of certified object,
  * that is wood under the form of tree, coal, plank.
  */
-contract TimberCoin {
-
+contract TokenTemplate {
+    
+    //Basic definitions: 
+    //  Owner(Connection to the CA)
+    //  Exchange(Connection to the Exchange)
+    //  Name of the Token
+    address public owner;
+    address public exchange;
+    string public name;
+    
+   
+    mapping (address => bool) allowedIssuers;
+    
     mapping (address => uint) balances;
-
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-
-    function TimberCoin() {
-        balances[tx.origin] = 0;
+    
+    function TokenTemplate(address newowner, address newexchange, string newname){
+        owner = newowner;
+        exchange = newexchange;
+        name = newname; 
     }
-
-    function sendCoin(address receiver, uint amount) returns(bool sufficient) {
+    
+    function setIssuer(address newIssuer) returns(bool){
+        if(msg.sender == owner)
+        {
+            allowedIssuers[newIssuer] = true;
+            return true;
+        } else { return false; }
+        
+    }
+    
+    function createToken(uint amount) returns(bool){
+        if(isValidIssuer(msg.sender))
+        {
+            balances[msg.sender] = balances[msg.sender] + amount;
+            return true;
+        }
+        else { return false; }
+    }
+    
+    function isValidIssuer(address issuer) returns(bool){
+        return allowedIssuers[issuer];
+    }
+    
+    function send(address receiver, uint amount) returns(bool sufficient){
         if (balances[msg.sender] < amount) return false;
+        
         balances[msg.sender] -= amount;
         balances[receiver] += amount;
-        Transfer(msg.sender, receiver, amount);
+        //Transfer(msg.sender, receiver, amount);
         return true;
+        
     }
-
-    function getBalanceInEth(address addr) returns(uint){
-        return ConvertLib.convert(getBalance(addr),2);
+    function destroyToken(address account, uint amount) returns(bool){
+        if(msg.sender == exchange && amount <= balances[account])
+        {
+            balances[account] = balances[account] - amount;
+        } else { return false; }
     }
-
-    function getBalance(address addr) returns(uint) {
-        return balances[addr];
+    
+    function getBalance(address addr) returns(uint){
+            return balances[addr];
     }
-
-    /** New functionalities of our coin start here! **/
-
-    function modifyToken(address agent, uint quantity) {
-        balances[agent] += quantity;
+    
+    function modifyToken(address account, uint amount) returns(bool){
+        if(msg.sender == exchange && amount >= 0)
+        {
+            balances[account] = amount;
+        } else { return false; }
     }
-
+    
+    
+    
 }
 
 /**
@@ -108,28 +148,61 @@ contract Exchange {
  */
 contract CentralAuthority {
 
-    mapping(address => uint) tokens;
-
+    address public owner;
+    address public exchange;
+    mapping(address => bool) allowedCertificator;
+    mapping(address => bool) allowedParticipants;
+    mapping(address => bool) tokens;
+    
+    //comment ug: I am actually not quite sure if we should do
+    //it with some kind of mapping or with an array, as we are not able to go
+    // with a foreach over an mapping, but we can check easily if it a 
+    // value is contained in there
     // certifiers
-    address[] authorizedConiators;
-    uint nConiators;
+    //address[] authorizedConiators;
+    //uint nConiators;
 
-    function CentralAuthority() {
-        nConiators = 0;
+    function CentralAuthority(address newOwner, address newExchange) {
+        owner = newOwner;
+        exchange = newExchange;
     }
-
-    /* Register a token */
-    function registerToken(address tokenAddr, uint token_id)
+    
+    function registerCertificator(address newCertificator) returns(bool) {
+        if(msg.sender == owner){
+            allowedCertificator[newCertificator] = true;
+            return true;
+        } else { return false; }
+    }
+    
+    function registerParticipant(address newParticiant) returns(bool) {
+        if(msg.sender == owner){ 
+            allowedParticipants[newParticiant] = true;
+            return true;
+        } else { return false; }
+    }
+    
+    function registerToken(address newToken) returns(bool) {
+        if(msg.sender == owner) {
+            tokens[newToken] = true;
+            return true;
+        } else { return false; }
+    }
+    
+    function issueNewIssuerAtToken(address TokenAddress, address issuer) returns(bool)
     {
-        tokens[tokenAddr] = token_id;
+        
     }
 
-    function registerExchange() {
-
+    function isValidCertificator(address certificator) returns(bool){
+        return allowedCertificator[certificator];
     }
-
-    function registerConiator() {
-
+    
+    function isValidParticipant(address participant) returns(bool){
+        return allowedParticipants[participant];
+    }
+    
+    function isValidToken(address Token) returns(bool){
+        return tokens[Token];
     }
 
 }

@@ -11,7 +11,9 @@ contract CentralAuthority {
     address public exchange;
     mapping(address => bool) allowedCertificator;
     mapping(address => bool) allowedParticipants;
-    mapping(address => bool) tokens;
+    //mapping(address => bool) tokens;
+    
+    TokenTemplate [] public  tokens;
 
     //comment ug: I am actually not quite sure if we should do
     //it with some kind of mapping or with an array, as we are not able to go
@@ -46,15 +48,21 @@ contract CentralAuthority {
 
     function registerToken(address newToken) returns(bool) {
         if(msg.sender == owner) {
-            tokens[newToken] = true;
+            TokenTemplate temp = TokenTemplate(newToken);
+            tokens.push(temp);
             return true;
         } else { return false; }
     }
 
-    //function issueNewIssuerAtToken(address TokenAddress, address issuer) returns(bool)
-    //{
-
-    //}
+    function issueNewIssuerAtToken(uint TokenNr, address issuer) returns(bool) {
+        if(isValidCertificator(msg.sender)) {
+            tokens[TokenNr].setIssuer(issuer);
+            return true;
+        } else { return false; }
+        //we ignore the request which token is used
+        //we use the first
+        
+    }
 
     function isValidCertificator(address certificator) returns(bool){
         return allowedCertificator[certificator];
@@ -63,9 +71,21 @@ contract CentralAuthority {
     function isValidParticipant(address participant) returns(bool){
         return allowedParticipants[participant];
     }
-
-    function isValidToken(address tokenAddress) returns(bool){
-        return tokens[tokenAddress];
+    
+    function createTestTokenContracts(uint number) returns(bool){
+        for(uint count = 0;count < number;count++)
+        {
+            tokens.push(new TokenTemplate(this,this,"TestToken"));
+        }
+        return true;
     }
+    
+    function getPublicAddressFromTokenContract(uint number) returns(address){
+        return address(tokens[number]);
+    }
+
+    //function isValidToken(address tokenAddress) returns(bool){
+        //return tokens[tokenAddress];
+    //}
 
 }

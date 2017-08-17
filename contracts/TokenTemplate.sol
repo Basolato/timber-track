@@ -17,9 +17,7 @@ contract TokenTemplate {
     address public exchange;
     string public name;
 
-
     mapping (address => bool) allowedIssuers;
-
     mapping (address => uint) balances;
 
     function TokenTemplate(address newowner, address newexchange, string newname){
@@ -57,23 +55,18 @@ contract TokenTemplate {
         balances[receiver] += amount;
         //Transfer(msg.sender, receiver, amount);
         return true;
-
     }
-    function destroyToken(address account, uint amount) returns(bool){
-        if(msg.sender == exchange && amount <= balances[account])
-        {
-            balances[account] = balances[account] - amount;
-        } else { return false; }
-    }
+    
 
     function getBalance(address addr) returns(uint){
         return balances[addr];
     }
 
+    //Only function for the Exchange to manipulate Tokens
     function modifyToken(address account, uint amount) returns(bool){
-        if(msg.sender == exchange && amount >= 0)
-        {
-            balances[account] = amount;
+        uint testcalc = balances[account] + amount;
+        if(msg.sender == exchange && testcalc >= 0) {
+            balances[account] += amount;
         } else { return false; }
     }
 

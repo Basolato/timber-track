@@ -9,53 +9,68 @@ pragma solidity ^0.4.8;
 import "./TokenTemplate.sol";
 
 contract Exchange {
+    
+    //an easy version of an Exchange rate which only supports one input and one output
+    struct ExchangeRate {
+        uint inputToken;
+        uint inputFactor;
+        
+        uint outputToken;
+        uint outputFactor;
+    }
+    
+    address public owner;
+    TokenTemplate [] public tokens;
 
-    uint rateTreePlank = 10;
-    uint rateTreeCoal = 50;
-
-    uint TREE_ID = 1;
-    uint COAL_ID = 2;
-    uint PLANK_ID = 3;
-
-    address owner;
-    TokenTemplate [] coins;
-
+    ExchangeRate [] public rates;
+    
     /* called only once at initialization */
-    function Exchange() {
-
+    function Exchange(address newOwner) {
+        owner = newOwner;
     }
-
-    function registerCoin(address cAddress) {
-
-        //if (msg.sender != owner)
-        //    assert(0);
-
-        coins.push(TokenTemplate(cAddress));
+    
+    //Thats a function only called from the owner, that said the CA, as the Exchange should have access
+    //To the exact same tokens
+    function registerToken(address cAddress) returns(bool) {
+        if (msg.sender != owner) {
+            tokens.push(TokenTemplate(cAddress));
+            return true;
+        } else { return false; }
     }
+    
+
 
     /* transform a certain quantity of a material
     in a new one, according to the exchange rate */
-    function transform(uint iToken, uint quantity, uint oToken) {
+    //function transform(uint NrExchangeRate, uint quantity) {
+        //address user = msg.sender;
+        //ExchangeRate rate = rates[NrExchangeRate];
+        //get TokenAmount
+        //uint tokenAmount = tokens[rate.inputToken].getBalance(user);
+        
+        //We first have to check how much coins are available to convert
+        
 
-        uint rate;
 
-        if ((iToken ==TREE_ID)&&(oToken==COAL_ID)) {
-            rate = rateTreeCoal;
-        } else {
-            rate = rateTreePlank;
-        }
+        //uint rate;
+
+        //if ((iToken ==TREE_ID)&&(oToken==COAL_ID)) {
+        //    rate = rateTreeCoal;
+        //} else {
+        //    rate = rateTreePlank;
+        //}
 
         // security checks
         // @TODO
 
         // delete the input token quantity
-        owner = msg.sender;
-        coins[iToken].modifyToken(owner, -quantity);
+        //owner = msg.sender;
+        //coins[iToken].modifyToken(owner, -quantity);
 
         // create the output token
-        uint oTokenQuantity = rate*quantity/100;
-        coins[oToken].modifyToken(owner, oTokenQuantity);
-    }
+        //uint oTokenQuantity = rate*quantity/100;
+        //coins[oToken].modifyToken(owner, oTokenQuantity);
+    //}
 
     /* Only the central authority can modify the rates
     * @TODO
@@ -63,4 +78,3 @@ contract Exchange {
     function changeRate() {}
 
 }
-

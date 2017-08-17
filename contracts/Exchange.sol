@@ -6,6 +6,8 @@
 
 pragma solidity ^0.4.8;
 
+import "./TokenTemplate.sol";
+
 contract Exchange {
 
     uint rateTreePlank = 10;
@@ -61,3 +63,4 @@ contract Exchange {
     function changeRate() {}
 
 }
+
